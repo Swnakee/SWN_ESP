@@ -15,6 +15,7 @@ public:
   ConcoleRenderer *console;
   Graph *graph;
   DisplayRenderer *displaye_null;
+  StatisticRenderer *statistic;
 
   Timer timer_01;
   Timer timer_02;
@@ -43,9 +44,11 @@ public:
     
     graph = sys::CreateObj<Graph>(128, 0, 0);
     displaye_null = sys::CreateObj<DisplayRenderer>();
+    statistic = sys::CreateObj<StatisticRenderer>();
 
     menu.AddMenu("Console", console);
     menu.AddMenu("Graph", graph);
+    menu.AddMenu("Stat", statistic);
     
 
     but1 = sys::CreateObj<Button>(27);
@@ -74,8 +77,8 @@ public:
       flag = false;
     }
     if(but1->IsUnpressPress() && but2->IsUnpressPress()) flag = true;
-  
 
+  
     if(timer_02)
     {
       static bool flag = false;
