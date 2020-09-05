@@ -33,9 +33,9 @@ public:
   void Start()
   {
     console = sys::CreateObj<ConcoleRenderer>();
-
-    sys::AddEventCreateObj({"Serial", [this](const String& name) {(*this->console) << "Create: " << name << endl;}});
-    sys::AddEventDeleteObj({"Serial", [this](const String& name) {(*this->console) << "Delete: " << name << endl;}});
+    
+    sys::AddEventCreateObj({"Cmd", [this](EventArgs* name)  { (*this->console) << "Create: "<< static_cast<StringEventArgs*>(name)->GetString() << endl; }});
+    sys::AddEventDeleteObj({"Cmd", [this](EventArgs* name)  { (*this->console) << "Delete: "<< static_cast<StringEventArgs*>(name)->GetString() << endl; }});
 
     
     graph = sys::CreateObj<Graph>(128, 0, 0);

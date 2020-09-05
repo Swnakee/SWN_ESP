@@ -3,9 +3,24 @@
 #include <Arduino.h>
 #include <functional>
 
+#include <__swn_event.h>
+
 namespace swn
 {
     class ConcoleRenderer;
+
+    class StringEventArgs : public EventArgs
+    {
+    private:
+        const String _str;
+    public:
+        StringEventArgs(const String& str);
+        ~StringEventArgs() override;
+
+        const String& GetString(void) const noexcept;
+    };
+
+
 
     class TimeInfo
     {
@@ -36,7 +51,7 @@ namespace swn
         const float& GetTimeMax(void) const;
         const float& GetTimeMin(void) const;
     };
-
+    
     class SysObject
     {
     private:
@@ -61,8 +76,8 @@ namespace swn
     
     private:
         static std::vector<SysObject*> _sys_obj;
-        static std::vector<std::pair<String,std::function<void(const String&)>>> _event_create_obj;
-        static std::vector<std::pair<String,std::function<void(const String&)>>> _event_delete_obj;
+        static EventManger _event_create_obj;
+        static EventManger _event_delete_obj;
         static TimeInfo _time_info;
         
     public:
@@ -72,8 +87,7 @@ namespace swn
         {
             __type__* buffer_ptr = new __type__(arg ...);
             _sys_obj.push_back(buffer_ptr);
-            for(size_t i = 0; i < _event_create_obj.size(); i++)
-                _event_create_obj[i].second(buffer_ptr->TypeName());
+            _event_create_obj(StringEventArgs(buffer_ptr->TypeName()));
             buffer_ptr->Start();
             return buffer_ptr;
         }
@@ -84,10 +98,10 @@ namespace swn
         static const TimeInfo& GetTimeInfo(void);
         static void SetTimerUpdate(const unsigned long& new_ms);
 
-        static const bool AddEventCreateObj(std::pair<String,std::function<void(const String&)>> func);
-        static const bool AddEventDeleteObj(std::pair<String,std::function<void(const String&)>> func);
-        static const bool DeleteEventCreateObj(std::pair<String,std::function<void(const String&)>> func);
-        static const bool DeleteEventDeleteObj(std::pair<String,std::function<void(const String&)>> func);
+        static const bool AddEventCreateObj(const pair<String, Event>& func);
+        static const bool AddEventDeleteObj(const pair<String, Event>& func);
+        static const bool DeleteEventCreateObj(const String& name);
+        static const bool DeleteEventDeleteObj(const String& name);
         static void DeleteAllEventCreateObj(void);
         static void DeleteAllEventDeleteObj(void);
 

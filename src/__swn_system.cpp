@@ -5,8 +5,16 @@
 
 using namespace swn;
 
-ConcoleRenderer *_cmd = nullptr;
 
+StringEventArgs::StringEventArgs(const String& str) : _str{str}{}
+StringEventArgs::~StringEventArgs() {}
+
+const String& StringEventArgs::GetString(void) const noexcept
+{
+    return _str;
+}
+
+////////////////////
 
 TimeInfo::TimeInfo() : TimeInfo::TimeInfo(0,0){}
 TimeInfo::TimeInfo(const unsigned long& mil, const float& time) : _micros{mil}, _time{time}, _counter{0}, _max_counter{1000}{}
@@ -67,8 +75,7 @@ void TimeInfo::SetMaxCounter(const int16_t& new_max_counter) { _max_counter = ne
 const float& TimeInfo::GetDeltaTime(void) const {return _time;}
 const float& TimeInfo::GetTimeMax(void) const {return _time_max;}
 const float& TimeInfo::GetTimeMin(void) const {return _time_min;}
-///////////////////////
-///////////////////////
+
 ///////////////////////
 
 SysObject::SysObject() : _is_delete{false}{}
@@ -82,8 +89,8 @@ const bool& SysObject::IsDelete(void) const { return _is_delete; }
 ///////////////////////
 ///
 std::vector<SysObject*> System::_sys_obj;
-std::vector<std::pair<String,std::function<void(const String&)>>> System::_event_create_obj;
-std::vector<std::pair<String,std::function<void(const String&)>>> System::_event_delete_obj;
+EventManger System::_event_create_obj;
+EventManger System::_event_delete_obj;
 TimeInfo System::_time_info;
 ///
 Timer update_timer;
@@ -92,7 +99,6 @@ void System::Init(void)
 {
     update_timer.Start(1000/60);
 }
-
 void System::Update()
 {
     _time_info.FirstUpdate();
@@ -116,8 +122,7 @@ void System::Update()
     {
         if(_sys_obj[i]->IsDelete())
         {
-            for(size_t j = 0; j < _event_delete_obj.size(); j++)
-                _event_delete_obj[j].second(_sys_obj[i]->TypeName());
+            _event_delete_obj(StringEventArgs(_sys_obj[i]->TypeName()));
             delete _sys_obj[i];
             _sys_obj.erase(_sys_obj.begin() + i);
         }
@@ -126,55 +131,40 @@ void System::Update()
 
 }
 
-std::vector<SysObject*>& System::GetSysObject() { return _sys_obj; }
-const TimeInfo& System::GetTimeInfo(void) { return _time_info; }
+std::vector<SysObject*>& System::GetSysObject() 
+{ 
+    return _sys_obj; 
+}
+const TimeInfo& System::GetTimeInfo(void)
+{ 
+    return _time_info; 
+}
 void SetTimerUpdate(const unsigned long& new_ms)
 {
     update_timer.Start(new_ms);
 }
 
-const bool System::AddEventCreateObj(std::pair<String,std::function<void(const String&)>> func)
+const bool System::AddEventCreateObj(const pair<String, Event>& func)
 {
-    for(size_t i = 0; i < _event_create_obj.size(); i++)
-        if(_event_create_obj[i].first == func.first)
-            return false;
-    _event_create_obj.push_back(func);
-    return true;
+    return _event_create_obj.AddEvent(func);
 }
-const bool System::AddEventDeleteObj(std::pair<String,std::function<void(const String&)>> func)
+const bool System::AddEventDeleteObj(const pair<String, Event>& func)
 {
-    for(size_t i = 0; i < _event_delete_obj.size(); i++)
-        if(_event_delete_obj[i].first == func.first)
-            return false;
-    _event_delete_obj.push_back(func);
-    return true;
+    return _event_delete_obj.AddEvent(func);
 }
-const bool System::DeleteEventCreateObj(std::pair<String,std::function<void(const String&)>> func)
+const bool System::DeleteEventCreateObj(const String& name)
 {
-    for(size_t i = 0; i < _event_create_obj.size(); i++)
-        if(_event_create_obj[i].first == func.first)
-        {
-            _event_create_obj.erase(_event_create_obj.begin() + i);
-            return true;
-        }
-    return false;
+    return _event_create_obj.DeleteEvent(name);
 }
-const bool System::DeleteEventDeleteObj(std::pair<String,std::function<void(const String&)>> func)
+const bool System::DeleteEventDeleteObj(const String& name)
 {
-    for(size_t i = 0; i < _event_create_obj.size(); i++)
-        if(_event_delete_obj[i].first == func.first)
-        {
-            _event_delete_obj.erase(_event_delete_obj.begin() + i);
-            return true;
-        }
-    return false;
+    return _event_delete_obj.DeleteEvent(name);
 }
 void System::DeleteAllEventCreateObj(void)
 {
-    _event_create_obj.clear();
+    _event_create_obj.DeleteAllEvent();
 }
 void System::DeleteAllEventDeleteObj(void)
 {
-    _event_delete_obj.clear();
+    _event_delete_obj.DeleteAllEvent();
 }
-
