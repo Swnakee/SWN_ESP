@@ -20,6 +20,8 @@ public:
   Timer timer_02;
   Timer timer_03;
 
+  MenuSwitcher menu;
+
 public:
 
   Looper() : SysObject(), display(0x3c, 23, 22)  { }
@@ -32,20 +34,19 @@ public:
 
   void Start()
   {
+    menu.SetDisplay(&display);
+
     console = sys::CreateObj<ConcoleRenderer>();
-    
     sys::AddEventCreateObj({"Cmd", [this](EventArgs* name)  { (*this->console) << "Create: "<< static_cast<StringEventArgs*>(name)->GetString() << endl; }});
     sys::AddEventDeleteObj({"Cmd", [this](EventArgs* name)  { (*this->console) << "Delete: "<< static_cast<StringEventArgs*>(name)->GetString() << endl; }});
 
     
     graph = sys::CreateObj<Graph>(128, 0, 0);
     displaye_null = sys::CreateObj<DisplayRenderer>();
-    //dis->SetDisplayRenderer(graph);
 
-    // System::GetConsole()->SetFloatResolution(6);
-    // ConcoleRenderer &cmd = *System::GetConsole();
-
-    display.SetDisplayRenderer(graph);
+    menu.AddMenu("Console", console);
+    menu.AddMenu("Graph", graph);
+    
 
     but1 = sys::CreateObj<Button>(27);
     but2 = sys::CreateObj<Button>(26);
@@ -65,16 +66,15 @@ public:
 
     //graph->Add(time.GetTimeMax());
     //ConcoleRenderer &cmd = *System::GetConsole();
-   
-   
-    if(but1->IsFirstPress())
+    
+    static bool flag = true;
+    if(but1->IsPress() && but2->IsPress() && flag)
     {
-      display.SetDisplayRenderer(graph);  
+      menu.Right(); 
+      flag = false;
     }
-    if(but2->IsFirstPress())
-    {
-      display.SetDisplayRenderer(console);  
-    }
+    if(but1->IsUnpressPress() && but2->IsUnpressPress()) flag = true;
+  
 
     if(timer_02)
     {
