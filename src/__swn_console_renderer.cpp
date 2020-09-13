@@ -1,4 +1,5 @@
 #include <__swn_console_renderer.h>
+#include <__swn_define.h>
 
 using namespace swn;
 
@@ -16,22 +17,34 @@ ConcoleRenderer::~ConcoleRenderer() {}
 void ConcoleRenderer::Add(const String& str)
 {
     _strlist[_offset] += str;
+    #ifdef __CONOLE_RENDERER_TO_SERIAL__
+    Serial.print(str);
+    #endif
     NeedUpdate();
 }
 void ConcoleRenderer::Add(const char& s)
 {
     _strlist[_offset] += s;
+    #ifdef __CONOLE_RENDERER_TO_SERIAL__
+    Serial.print(s);
+    #endif
     NeedUpdate();
 }
 void ConcoleRenderer::Endl(void)
 {
     _offset = (_offset+1)%CONSOLE_RENDERER_COUNT_LINES;
     _strlist[_offset] = EMPTY_STRING;
+    #ifdef __CONOLE_RENDERER_TO_SERIAL__
+    Serial.println();
+    #endif
     NeedUpdate();
 }
 void ConcoleRenderer::ClearLine(void)
 {
     _strlist[_offset] = EMPTY_STRING;
+    #ifdef __CONOLE_RENDERER_TO_SERIAL__
+    Serial.print('\r');
+    #endif
     NeedUpdate();
 }
 void ConcoleRenderer::Clear(void)
@@ -126,9 +139,9 @@ ConcoleRenderer& ConcoleRenderer::operator << (const double& str)
 void ConcoleRenderer::Render(void)
 {
     DisplaySSD1306 *dis = GetDisplay();
-    if(dis)
+    if(this->GetIsNeedUpdate() && dis)
     {
-        SSD1306 &display_src = dis->GetDisplay();
+        SSD1306 &display_src = *dis->GetDisplay();
         
         display_src.clear();
         uint8_t buffer_count = CONSOLE_RENDERER_COUNT_LINES - 1;
@@ -141,7 +154,4 @@ void ConcoleRenderer::Render(void)
     }
 }
  
-const char* ConcoleRenderer::TypeName(void) 
-{
-    return "ConcoleRenderer";
-}
+

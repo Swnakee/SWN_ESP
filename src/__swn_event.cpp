@@ -1,43 +1,46 @@
+#include <__swn_subscriber.h>
 #include <__swn_event.h>
+#include <random>
 
 using namespace std;
 using namespace swn;
 
-
-EventArgs::EventArgs(){}
-EventArgs::~EventArgs(){}
-
-///////////////////////////
-
-
-const bool EventManger::AddEvent(const pair<String, Event>& func)
+void Event::__AddSub(Subscriber *sub)
 {
-    for(size_t i = 0; i < _events.size(); i++)
-        if(_events[i].first == func.first)
-            return false;
-    _events.push_back(func);
-    return true;
-}
-const bool EventManger::DeleteEvent(const String& name)
-{
-    for(size_t i = 0; i < _events.size(); i++)
-        if(_events[i].first == name)
-        {
-            _events.erase(_events.begin() + i);
-            return true;
-        }
-    return false;
-}
-void EventManger::DeleteAllEvent(void)
-{
-    _events.clear();
+    _subs.push_back(sub);
 }
 
-void EventManger::operator()(const EventArgs& param)
+void Event::__DeleteSub(Subscriber *sub)
 {
-    if(_events.empty()) return;
+    for(size_t i = 0; i < _subs.size(); i++)
+        if(_subs[i] == sub)
+            _subs.erase(_subs.begin() + i);
+}
 
-    EventArgs &event = const_cast<EventArgs&>(param);
-    for(size_t i = 0; i < _events.size(); i++)
-        _events[i].second(&event);
+////////////////
+
+Event::Event() : _subs()
+{
+
+}
+
+Event::~Event()
+{
+    ClearSubs();
+}
+
+void Event::ClearSubs(void)
+{
+    while (!_subs.empty())
+    {
+        Subscriber *ptr = _subs.front();
+        ptr->UnSub(this);
+    }
+}
+
+void Event::operator()(void *data)
+{
+    std::vector<Subscriber*> _buffer_subs = _subs;
+    for(size_t i = 0; i < _buffer_subs.size(); i++)
+        _buffer_subs[i]->Run(this, data);
 }

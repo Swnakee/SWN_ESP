@@ -1,81 +1,95 @@
 #include <__swn_button.h>
+#include <__swn_sys_object.h>
 
 using namespace swn;
 
+#define DROP_PRESS 60
 
-Button::Button(const int8_t& pin, const unsigned long& time_delay_second_press) 
-    : _pin{pin}, _status{0}, _timer_press{0}, _count_press{0}, 
-    _info_count_press{0}, _time_delay_second_press{time_delay_second_press},
-    _is_first_press{false}, _is_unpress{false}
+Button::Button(sys *s, const int8_t& pin, const unsigned long& time_delay_second_press) 
+    : SysObject(s),
+    _pin{pin}, _status{0}, _count_press{0}, _time_press{0}, _time_second_press{time_delay_second_press},
+    _timer_drop(), _timer_un_press_drop(), _timer_second_press(),
+    _event_press(), _event_un_press(), _event_second_press()
 {
     pinMode(_pin, INPUT);
 }
-      
-void Button::FirstUpdate(const TimeInfo& time)
+
+Button::~Button(){}
+
+Event* Button::Event_Press(void)
 {
-    
-    if(digitalRead(_pin) == 1)
+    return &_event_press;
+}
+Event* Button::Event_Un_Press(void)
+{
+    return &_event_un_press;
+}
+Event* Button::Event_Second_Press(void)
+{
+    return &_event_second_press;
+}
+
+const unsigned long Button::GetTimePress(void) const noexcept
+{
+    if(_status == 2)
+        return millis() - _time_press;
+    return 0;
+}
+const int8_t Button::GetCountPress(void) const noexcept
+{
+    return _count_press;
+}
+const int8_t Button::GetPin(void) const noexcept
+{
+    return _pin;
+}
+
+void Button::UpdateStatus()
+{
+    bool buffer_press = digitalRead(_pin);
+
+    if(buffer_press)
     {
         if(_status == 0)
         {
             _status = 1;
-            _timer_mistake_press.Start(20);
+            _timer_drop.Start(DROP_PRESS);
         }
-        else if(_timer_mistake_press && _status == 1)
+        else if(_timer_drop && _status == 1)
         {
-            _is_first_press = true;
-            
+            _time_press = millis();
             _status = 2;
+            _count_press++;
 
-            _timer_press = millis();
-            _info_count_press++;
-
-            if(!_timer_second_press)
-            {
-                _count_press++;  
-                _timer_second_press.Stop();
-            }
+            if(_count_press == 1)
+                _event_press(this);
             else
-                _count_press = 1;  
+                _event_second_press(this);
         }
     }
-    else 
+    else
     {
-        if(_status == 1)
-            _status = 0;
-        else if(_status == 2)
+        if(_status == 2)
         {
-            _status = 0;
-            _timer_press = 0;
-            _timer_second_press.Start(_time_delay_second_press);
+            _status = 3;
+            _timer_un_press_drop.Start(DROP_PRESS);
         }
-        _is_unpress = true;
-    }
-
-    if(_timer_second_press)
-    {
-        _count_press = 0; 
-        _timer_second_press.Stop();   
+        else if(_timer_un_press_drop && _status == 3)
+        {
+            _timer_second_press.Start(_time_second_press);
+            _event_un_press(this);
+            _status = 0;
+        }
+        
+        if(_timer_second_press)
+        {
+            _count_press = 0;
+            _timer_second_press.Stop();
+        }
     }
 }
 
-void Button::LastUpdate(const TimeInfo& time)
+const char* Button::TypeName(void) const noexcept
 {
-    _is_first_press = _is_unpress = false;
+    return "Button";
 }
-
-const char* Button::TypeName(void) {return "Button"; }
-
-
-const unsigned long& Button::GetTimeDelaySecondPress(void) {return _time_delay_second_press;}
-void Button::SetTimeDelaySecondPress(const unsigned long& new_time) {_time_delay_second_press = new_time;}
-const int8_t& Button::GetPin(void) {return _pin;}
-const bool Button::IsPress(void) {return _status == 2 ? true : false;}
-const unsigned long Button::GetTimePress(void) {return _status == 2 ? millis() - _timer_press : 0;}
-const int8_t& Button::GetCountPress(void) {return _count_press;}
-const int32_t& Button::GetInfoCountPress(void) {return _info_count_press;}
-const bool Button::Trigger(void) {return _info_count_press%2 == 1 ? true : false;}
-
-
-const bool& Button::IsFirstPress(void) const { return _is_first_press; }
-const bool& Button::IsUnpressPress(void) const { return _is_unpress; }

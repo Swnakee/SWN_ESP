@@ -1,36 +1,26 @@
 #pragma once
 
 #include <vector>
-#include <functional>
-#include <Arduino.h>
-
-using namespace std;
 
 namespace swn
 {
-    class EventArgs;
-    class EventManger;
-    typedef std::function<void(EventArgs*)> Event;
+    class Subscriber;
 
-    class EventArgs
+    class Event
     {
-    public:
-        EventArgs();
-        virtual ~EventArgs();
-    };
-
-    class EventManger
-    {
+        friend class Subscriber;
     private:
-        vector< pair<String, Event> > _events;
+        std::vector<Subscriber*> _subs;
+
+        void __AddSub(Subscriber *sub);
+        void __DeleteSub(Subscriber *sub);
     public:
-        const bool AddEvent(const pair<String, Event>& func);
-        const bool DeleteEvent(const String& name);
-        void DeleteAllEvent(void);
+        Event();
+        ~Event();
 
-        void operator()(const EventArgs& param);
+        void ClearSubs(void);
+
+        void operator()(void *data = nullptr);
+        
     };
-
 }
-   
-

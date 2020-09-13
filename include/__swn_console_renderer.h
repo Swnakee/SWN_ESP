@@ -1,6 +1,6 @@
 #pragma once
 
-#include <__swn_display_SSD1306.h>
+#include <__swn_display_renderer.h>
 
 #define CONSOLE_RENDERER_COUNT_LINES 7
 
@@ -44,10 +44,7 @@ namespace swn
         ConcoleRenderer& operator << (const float& str);
         ConcoleRenderer& operator << (const double& str);
 
-
         void Render(void) override;
- 
-        const char* TypeName(void) override;
     };
 
 }

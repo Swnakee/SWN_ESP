@@ -13,14 +13,15 @@ namespace swn
     public:
       Timer();
       ~Timer();
-      void Start(const unsigned long & time_ms);
-      void Restart();
-      void Restart(const unsigned long & time_ms);
-      void Stop(void);
+
+      void Start(const unsigned long & time_ms) noexcept;
+      void Restart() noexcept;
+      void Restart(const unsigned long & time_ms) noexcept;
+      void Stop(void) noexcept;
+
       const bool IsTick() const noexcept;
+
       operator bool() const noexcept;
   };
-
-
 
 }
