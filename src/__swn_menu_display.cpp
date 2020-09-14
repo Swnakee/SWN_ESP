@@ -69,6 +69,7 @@ const bool MenuSwitcher::SwitchTo(const String& name)
         if(_menu[i].first == name)
         {
             _offset = i;
+            Render();
             return _is_init_menu = true;
         }
     return _is_init_menu = false;
@@ -76,11 +77,13 @@ const bool MenuSwitcher::SwitchTo(const String& name)
 void MenuSwitcher::Right(void)
 {
     _offset = (_offset+1)%_menu.size();
+    Render();
 }
 void MenuSwitcher::Left(void)
 {
     if(_offset == 0) _offset = _menu.size() - 1;
     else _offset--;
+    Render();
 }
 
 void MenuSwitcher::Render(void)

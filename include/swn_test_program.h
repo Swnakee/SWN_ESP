@@ -3,6 +3,7 @@
 #include <swn.h>
 
 using namespace std;
+using namespace std::placeholders;
 using namespace swn;
 
 namespace swn
@@ -26,7 +27,8 @@ namespace swn
         size_t last_microsec_graph = 0;
         Timer graph_update_timer;
         //
-        EventTimer screen_timer_update;
+        EventTimer event_timer_01;
+        Subscriber *event_timer_01_update;
         //
         //button
         Button but1;
@@ -41,7 +43,7 @@ namespace swn
 
     public:
         SwnTestProgram(sys *s) 
-            :   SysObject(s), screen_graph(GRAPH_X, 0, 1), screen_timer_update(100, s),
+            :   SysObject(s), screen_graph(GRAPH_X, 0, 1), event_timer_01(1000/60, s),
                 but1(s, BUT1), but2(s, BUT2), bu1_press{nullptr}, bu2_press{nullptr}, bu1_un_press{nullptr}, bu2_un_press{nullptr},
                 _but1_press{false}, _but2_press{false}
         {
@@ -55,6 +57,7 @@ namespace swn
             delete bu2_press;
             delete bu1_un_press;
             delete bu2_un_press;
+            delete event_timer_01_update;
         }
 
         void Init()
@@ -65,13 +68,12 @@ namespace swn
             screen_menu.SetDisplay(display);
             pinMode(LED, OUTPUT);
 
-            screen_menu.Sub_Render()->Sub(screen_timer_update.Event_Tick());
             screen_menu.AddRenderer("CMD", &screen_cmd);
             screen_menu.AddRenderer("GRAPH", &screen_graph);
             screen_menu.SwitchTo("GRAPH");
 
-            bu1_press = new Subscriber([this](Event*,void*) { _but1_press = true; });
-            bu2_press = new Subscriber([this](Event*,void*) { _but2_press = true; });
+            bu1_press = new Subscriber([this](Event*,void*) { _but1_press = true; screen_cmd << "But1 prees" << endl << upd; });
+            bu2_press = new Subscriber([this](Event*,void*) { _but2_press = true; screen_cmd << "But2 prees" << endl << upd; });
             bu1_un_press = new Subscriber([this](Event*,void*) { _but1_press = false; });
             bu2_un_press = new Subscriber([this](Event*,void*) { _but2_press = false; });
             bu1_press->Sub(but1.Event_Press());
@@ -80,12 +82,13 @@ namespace swn
             bu2_un_press->Sub(but2.Event_Un_Press());
 
             graph_update_timer.Start(25);
-        }
 
-        void UpdateStatus() override
+            event_timer_01_update = new Subscriber(std::bind(&SwnTestProgram::EventTimer01, this, _1, _2));
+            event_timer_01_update->Sub(event_timer_01.Event_Tick());
+        }
+        void EventTimer01(Event*, void*)
         {
             // graph update
-            count_microsec_graph++;
             if(graph_update_timer)
             {
                 screen_graph.Add( (micros() - last_microsec_graph) / (float)count_microsec_graph / 1000.0f / 1000.0f );
@@ -97,6 +100,12 @@ namespace swn
 
                 graph_update_timer.Restart();
             }
+            // --------------
+        }
+        void UpdateStatus() override
+        {
+            // graph update
+            count_microsec_graph++;
             // --------------
 
             if(_but1_press && _but2_press)

@@ -24,8 +24,6 @@ void setup()
   testProgram = new SwnTestProgram(&s);
 }
 
-
-
 void loop() 
 {
   s.UpdateSystem();
