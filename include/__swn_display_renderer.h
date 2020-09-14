@@ -1,6 +1,7 @@
 #pragma once
 
 #include "SSD1306.h" 
+#include "__swn_subscriber.h"
 
 namespace swn
 {
@@ -19,15 +20,16 @@ namespace swn
     {
     private:
         DisplaySSD1306 *_display;
-        bool _need_update;
+
+        Subscriber _sub_render;
     public:
         DisplayRenderer(void);
         virtual ~DisplayRenderer();
 
         void        SetDisplay(DisplaySSD1306 *display) noexcept;
         DisplaySSD1306*GetDisplay(void) noexcept;
-        void        NeedUpdate(const bool& flag = true) noexcept;
-        const bool& GetIsNeedUpdate(void) const noexcept;
+
+        Subscriber* Sub_Render();
 
         virtual void Render(void);
     

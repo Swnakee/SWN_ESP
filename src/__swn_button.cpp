@@ -64,7 +64,10 @@ void Button::UpdateStatus()
             if(_count_press == 1)
                 _event_press(this);
             else
+            {
+                _event_press(this);
                 _event_second_press(this);
+            }
         }
     }
     else

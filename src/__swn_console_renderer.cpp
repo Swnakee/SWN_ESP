@@ -20,7 +20,6 @@ void ConcoleRenderer::Add(const String& str)
     #ifdef __CONOLE_RENDERER_TO_SERIAL__
     Serial.print(str);
     #endif
-    NeedUpdate();
 }
 void ConcoleRenderer::Add(const char& s)
 {
@@ -28,7 +27,6 @@ void ConcoleRenderer::Add(const char& s)
     #ifdef __CONOLE_RENDERER_TO_SERIAL__
     Serial.print(s);
     #endif
-    NeedUpdate();
 }
 void ConcoleRenderer::Endl(void)
 {
@@ -37,7 +35,6 @@ void ConcoleRenderer::Endl(void)
     #ifdef __CONOLE_RENDERER_TO_SERIAL__
     Serial.println();
     #endif
-    NeedUpdate();
 }
 void ConcoleRenderer::ClearLine(void)
 {
@@ -45,14 +42,12 @@ void ConcoleRenderer::ClearLine(void)
     #ifdef __CONOLE_RENDERER_TO_SERIAL__
     Serial.print('\r');
     #endif
-    NeedUpdate();
 }
 void ConcoleRenderer::Clear(void)
 {
     for(size_t i = 0; i < CONSOLE_RENDERER_COUNT_LINES; i++)
         _strlist[i] = EMPTY_STRING;
     _offset = 0;
-    NeedUpdate();
 }
 
 const int8_t& ConcoleRenderer::GetFloatResolution(void) const {return _float_rezolution;}
@@ -139,7 +134,7 @@ ConcoleRenderer& ConcoleRenderer::operator << (const double& str)
 void ConcoleRenderer::Render(void)
 {
     DisplaySSD1306 *dis = GetDisplay();
-    if(this->GetIsNeedUpdate() && dis)
+    if(dis)
     {
         SSD1306 &display_src = *dis->GetDisplay();
         

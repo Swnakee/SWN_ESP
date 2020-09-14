@@ -31,9 +31,9 @@ Graph::~Graph()
 
 void Graph::Add(const float& val)
 {
-    // float smooth_val = _buffer[((_index_write-1)%_buffer.Size())];
-    // _buffer[_index_write] = smooth_val*0.9 + val*0.1;
-    _buffer[_index_write] = val;
+    float smooth_val = _buffer[((_index_write-1)%_buffer.size())];
+    _buffer[_index_write] = smooth_val*0.5 + val*0.5;
+    //_buffer[_index_write] = val;
     _index_write = ((_index_write+1)%_buffer.size());
     //if(_index_write%5 == 0)
     {
@@ -41,7 +41,6 @@ void Graph::Add(const float& val)
         _min = _min * 0.8 + _buffer[__Min(_buffer)] * 0.5f * 0.2; 
         
     }
-    NeedUpdate();
 }
 
 const uint8_t __Get_Y__(const float& buf_y, const float& min, const float& max)
@@ -60,7 +59,7 @@ void Graph::SetMin(const float& min) {_min = min;}
 void Graph::Render(void) 
 {
     DisplaySSD1306 *dis = GetDisplay();
-    if(this->GetIsNeedUpdate() && dis)
+    if(dis)
     {
         SSD1306 &display_src = *dis->GetDisplay();
         display_src.clear();
